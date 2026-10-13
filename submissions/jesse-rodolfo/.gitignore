@@ -1,0 +1,8 @@
+# dados brutos do Kaggle não vão para o repositório
+solution/data/raw/
+# ambientes e caches
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
