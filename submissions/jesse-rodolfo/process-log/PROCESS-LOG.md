@@ -5,6 +5,10 @@ Regra deste log: escrito durante o trabalho, por mim, com horário. A IA lista o
 
 ---
 
+Véspera (13/10, até 19:33): estrutura da pasta, kit de sessão (CLAUDE.md, commit.sh, guia de git), script de download e download dos CSVs. Nenhum dado aberto ou analisado; não conta no tempo.
+
+---
+
 ## Bloco 0: Leitura do problema (antes de abrir qualquer dado)
 
 Início: 07:30  Fim: 07:55

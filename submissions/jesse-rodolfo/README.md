@@ -178,6 +178,8 @@ O G4 rodou o brief em Claude, GPT e Gemini. O que veio do meu julgamento:
 
 Orçamento do G4: 4 a 6 horas. Líquido = decorrido menos pausas (2 min de bloqueio do macOS e 15 de café, 17 no total). Intervalos entre blocos contam como trabalho.
 
+Véspera (13/10, até 19:33): estrutura da pasta, kit de sessão (CLAUDE.md, commit.sh, guia de git), script de download e download dos CSVs. Nenhum dado aberto ou analisado; não conta no tempo.
+
 | Período | Minutos | O que foi feito |
 |---|---|---|
 | Bloco 0 (07:30 a 07:55) | 25 | |
