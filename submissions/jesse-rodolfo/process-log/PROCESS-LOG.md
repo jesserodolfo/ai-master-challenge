@@ -28,7 +28,7 @@ O que eu decidi não fazer: não vou propor automação antes de fechar o diagn�
 
 **Problema de setup encontrado:** o .gitignore da raiz do repositório ignora submissions/. Resolvido com `git add -f` dentro da minha pasta, sem tocar em arquivo fora dela.
 
-Commit:
+Commit: 15166ae
 
 ---
 
@@ -68,7 +68,7 @@ Início: 07:58  Fim: 08:15
 **Decisão minha:**
 O D1 não serve para medir tempo nem satisfação, e eu vou provar isso em vez de fingir que serve. O que ele tem de confiável é a estrutura do backlog: 67% não fechados (33% abertos e 34% esperando o cliente), o que já sustenta a minha hipótese de que o desperdício está na espera. O diagnóstico vai dizer com clareza o que dá para afirmar, o que não dá, e o que a operação precisa registrar para passar a dar. O desperdício eu calculo em faixa, por premissa, sobre os 30 mil tickets por ano do brief, com cada premissa escrita para o diretor trocar pelo número dele. O D2 fica para provar que classificar ticket por texto funciona. Já vivi essa situação na logística: o indicador oficial escondia 500 pedidos, e a decisão certa foi consertar a medição antes de expandir. Aqui é a mesma coisa: instrumentar antes de automatizar.
 
-Commit:
+Commit: 76fe526
 
 ---
 
@@ -126,7 +126,7 @@ Consequências que levo para a proposta:
 **O que eu adicionei que a IA sozinha não faria:**
 Desconfiei do dado antes de abrir e provei que ele não mede tempo nem satisfação. A IA desta sessão fez a auditoria antes de qualquer média porque o CLAUDE.md que eu escrevi mandou desconfiar primeiro. Sem essa direção, o caminho padrão seria calcular médias por canal e prioridade e apresentar como gargalo. Troquei as premissas dela pelo custo da hora da minha operação e pela triagem cronometrada em mim mesmo, e deixei por escrito o que ninguém mediu. Decidi responder as três perguntas do diretor mesmo com dado ruim, em faixa e com sensibilidade, em vez de só dizer que o dado não serve. Classifiquei o desperdício por recuperabilidade e coloquei a cobrança de cliente como automação, porque já operei isso. E mantive a tabela de sensibilidade como saiu, sem mexer em premissa para o resultado ficar como eu esperava.
 
-Commit:
+Commit: ce37da8
 
 ---
 
@@ -174,7 +174,7 @@ A regra mestra do banco de respostas validadas, que é o meu produto; a entrada 
 - Dataset 2: até 84,9% dos textos têm "thanks", "regards", "best" ou "annual leave"; "out of office" não aparece. É teto, porque "thank" também é cortesia no meio do pedido.
 - Resolution: 2.769 textos únicos em 2.769 fechados, nenhum repetido no mesmo assunto. A regra de aprendizado não é testável neste dataset.
 
-Commit:
+Commit: aace227
 
 ---
 
@@ -205,6 +205,9 @@ Uma passada: `treinar.py`, `rotear.py` e `test_rotear.py` rodaram na primeira ex
 - A cobertura de 62,9% no limiar 0,7 ficou perto da parada de 60% da fase 2. A regra de parada não muda depois de ver o número; o piloto com texto real decide.
 - Ideia minha para depois da fase 1: o portão de Administrative rights pode virar verificação contra uma lista de autorizados mantida por quem tem alçada, e o humano só vê a exceção. O mesmo raciocínio vale para Purchase, com teto de valor. Fica como portão na fase 1 porque essa lista não existe no dataset.
 
+- Limite levantado na revisão com o segundo modelo e confirmado por mim: Administrative rights com recall de 61,4%. Quatro em 10 pedidos saem como outra categoria. Medido no held-out: 30 dos 352 (8,5%) chegam a "automático"; os outros vão para humano pelo limiar. Na fase 2 o portão não pode depender só do classificador: palavra-chave (admin, rights, permission) como segunda trava, e ticket cuja segunda categoria mais provável é portão vai para o humano. Dos 30 que escapam, 25 têm segunda categoria portão; a regra mandaria também 447 dos 5.486 automáticos (8,1%) para humano.
+- O segundo commit "bloco4: prototipo" é a correção do 62,9% para 57,3% no texto "Como medi".
+
 **Lista da IA: o que fez e o que achou (para eu editar):**
 - Escopo seguido como pedido: `treinar.py`, `rotear.py`, `test_rotear.py` e `README.md` em `solution/prototipo/`. Sem Streamlit.
 - Held-out de 9.568 tickets (20% estratificado, seed 42): acurácia 85,69%, contra 28,47% da classe majoritária (Hardware).
@@ -214,21 +217,29 @@ Uma passada: `treinar.py`, `rotear.py` e `test_rotear.py` rodaram na primeira ex
 - Para o modelo não subir no commit: `.gitignore` local e uma exclusão em `commit.sh`, porque `git add -f` ignora o `.gitignore`.
 - Cobertura de 62,9% no limiar 0,7 está perto da regra de parada da fase 2 (pausar abaixo de 60%).
 
-Commit:
+Commit: 071cae3 e 9b1efb9 (o segundo corrige 62,9% para 57,3%)
 
 ---
 
 ## Bloco 5: Fechamento
 
-Início: __:__  Fim: __:__
+Início: 11:35  Fim: 12:30
+
+Executor do Bloco 5: Sonnet 5.5, o mesmo do Bloco 4 (limite de uso do Opus; janela volta às 12:20).
 
 **O que cortei do documento final para ficar curto:**
+A tabela de premissas (ficou a linha apontando pro diagnóstico), o fluxo 0 a 6 (ficou em duas linhas), abordagem, workflow e limitações encurtados, e a duplicata entre "o que adicionei" e "o que fiz diferente do baseline". Motivo: README é pra decisão em cinco páginas; o detalhe está nos documentos de solution/.
 
 **Limitações que assumi por escrito:**
+Dataset 1 sintético, desperdício por premissa e não por medição; repasse, cobrança e reabertura não medidos; piloto com volume pequeno; acurácia contra rótulo com ruído; limiar e portões não calibrados com tickets reais; Administrative rights com recall de 61,4% e 8,5% escapando do portão; sem interface gráfica.
+
+**Falha da ferramenta de commit, encontrada na revisão final e corrigida:**
+A revisão final (Opus 5.5, só leitura) achou `.pytest_cache/` (4 arquivos) e `solution/prototipo/__pycache__/` (3 .pyc) commitados no `071cae3`. O padrão `:!.../**/__pycache__` do `commit.sh` não excluía nada, porque sem a opção glob do git o caminho precisa bater inteiro, e `.pytest_cache` não tinha exclusão. Correção: os 7 arquivos saíram do índice com `git rm -r --cached` (continuam no disco); o `commit.sh` passou a usar `:(exclude,glob)` para `__pycache__`, `.pytest_cache`, `*.pyc` e `.ipynb_checkpoints`; o `.gitignore` local ganhou `.pytest_cache/`; e o `commit.sh` ganhou uma trava que recusa `.pyc` ou `.pytest_cache` no commit, igual à do CSV. Testado com `git add -n -f`: nenhum desses arquivos entra.
 
 **Tempo total:**
+4 h 43 líquidas em 5 h decorridas (07:30 a 12:30, 17 min de pausa). Intervalos entre blocos foram checkpoints com o revisor, log e commits.
 
-Commit:
+Commit: pendente
 
 ---
 
@@ -236,10 +247,10 @@ Commit:
 
 | Ferramenta | Para que usei |
 |---|---|
-| Claude Code | |
-| Python | |
-| Git | |
+| Claude Code | Executor em todos os blocos (Opus 5.5 nos Blocos 0 a 3, Sonnet 5.5 nos Blocos 4 e 5) |
+| Python | Análise, classificador e testes |
+| Git | Um commit por bloco via commit.sh |
 
-Iterações totais:
-Maior erro da IA no processo:
-Maior contribuição minha:
+Iterações totais: 5 blocos, uma rodada de pendências em cada, correção extra nos Blocos 2 e 4.
+Maior erro da IA no processo: triagem de 1,5 a 5 min sem medir, 1.250 h a mais no caso base.
+Maior contribuição minha: regra mestra com portões de autoridade, entrada estruturada e auditar os dados antes de diagnosticar.

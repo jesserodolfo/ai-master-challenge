@@ -4,6 +4,7 @@ solution/data/raw/
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 .ipynb_checkpoints/
 .env
 # modelo treinado: regenerar com treinar.py
