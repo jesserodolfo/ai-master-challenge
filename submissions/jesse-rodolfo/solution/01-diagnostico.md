@@ -1,11 +1,11 @@
 # Diagnóstico operacional
 
-**Para o diretor:** a operação perde de 1.042 a 11.400 horas de agente por ano; no caso base são 3.950 horas, o equivalente a 2,5 agentes em tempo integral, e o maior item recuperável é cobrar o cliente que não responde (1.700 h/ano).
+**Para o diretor:** a operação perde de 1.042 a 11.400 horas de agente por ano; no caso base são 3.950 horas, o equivalente a 2,5 agentes em tempo integral, e o maior item recuperável é cobrar o cliente parado (1.700 h/ano), alvo do piloto "Lembrete de cliente parado".
 
 1. Não existe registro de quando o ticket abre, então nenhum tempo de resposta ou de resolução pode ser medido.
 2. O que dá para ver é a fila: 67% não fechados (33% abertos e 34% esperando o cliente).
 3. Nada do que a operação registra explica a nota do cliente.
-4. Recomendação 1: registrar quatro campos antes de automatizar.
+4. Recomendação 1: padronizar a entrada e registrar cinco campos antes de automatizar.
 
 Números de `solution/analise/02_diagnostico.py` sobre o dataset 1 (8.469 tickets, não os 30 mil do brief). O dataset 1 é sintético e seus campos de tempo não medem duração; a prova e os testes estatísticos estão em `docs/auditoria-dados.md`.
 
@@ -46,7 +46,7 @@ Horas de agente por ano sobre os 30 mil tickets do brief. Cada premissa pode ser
 
 | Desperdício (h/ano) | Baixo | Base | Alto | Etiqueta |
 |---|---|---|---|---|
-| Espera que vira trabalho: cobrar o cliente | 375 | 1.700 | 5.400 | Recuperável por automação (lembrete automático e encerramento após prazo) |
+| Espera que vira trabalho: cobrar o cliente | 375 | 1.700 | 5.400 | Recuperável por automação (lembrete de cliente parado: lembrete e encerramento após prazo) |
 | Movimentação: repasse entre filas | 250 | 1.000 | 2.250 | Recuperável por automação (classificação e roteamento) |
 | Superprocessamento: triagem manual | 167 | 250 | 1.500 | Recuperável por automação (classificação) |
 | Retrabalho: reabertura | 250 | 1.000 | 2.250 | Não recuperável até medir a causa |
@@ -84,11 +84,14 @@ Fica fora da conta o tempo que o cliente espera sem ninguém trabalhando no tick
 
 ## 5. Recomendação 1: instrumentar antes de automatizar
 
+**Passo zero, entrada estruturada:** o cliente escolhe o tipo num menu e preenche 2 ou 3 campos obrigatórios; o texto livre vira complemento. É a forma mais barata de instrumentar a entrada e reduz a triagem quase a zero nos tickets bem preenchidos (detalhe em `02-proposta-automacao.md`).
+
 | Campo, registrado pelo sistema | O que destrava |
 |---|---|
 | Data e hora de abertura | Tempo até primeira resposta e até resolução por canal, prioridade e tipo |
 | Data e hora de cada mudança de status | Separa espera interna (aberto sem dono) de espera externa (cliente) |
 | Contador de reabertura | Taxa real de retrabalho, hoje premissa de 5% a 15% |
 | Histórico de fila e responsável | Taxa real de repasse, hoje premissa de 10% a 30% |
+| Resolução aplicada ligada à nota do cliente | Saber qual resposta funciona, base do aprendizado do banco de respostas; hoje Resolution é texto aleatório e nenhum se repete |
 
 Com duas semanas desses campos, as premissas de cobrança e repasse viram medidas e a faixa de 1.042 a 11.400 horas vira um número. Sem eles, nenhuma automação tem antes e depois para comparar.

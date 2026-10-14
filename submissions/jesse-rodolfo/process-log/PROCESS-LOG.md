@@ -118,7 +118,7 @@ Consequências que levo para a proposta:
 - CSAT: modelo com todas as variáveis acerta 20,0%, abaixo dos 20,9% do chute da nota mais comum.
 - Desperdício com as premissas finais: 1.042 a 11.400 h/ano, base 3.950 h, 2,5 agentes, R$ 198 mil/ano. Maior item recuperável: cobrança do cliente, 1.700 h no base.
 - Sensibilidade: as duas premissas que mais mexem no total são do ciclo de cobrança (amplitude 1.700 h cada), seguidas da triagem (1.333 h). Repasse fica empatado com pendente e reabertura (1.000 h).
-- 60,0% dos tickets do dataset 1 são do tipo Refund, Billing ou Cancellation; só 18,8% têm assunto Refund, Payment ou Cancellation.
+- 60,0% dos tickets do dataset 1 são do tipo Refund, Billing inquiry (dúvida ou disputa de fatura) ou Cancellation; só 18,8% têm assunto Refund, Payment ou Cancellation.
 
 **Onde a IA errou e como corrigi:**
 - A IA propôs triagem de 1,5 a 5 minutos por ticket, sem medição. Cronometrei 5 tickets aleatórios: média 19,94 s. A premissa de triagem caiu para 20 s a 3 min, e a triagem no caso base caiu de 1.500 h/ano para 250 h/ano. O total base caiu de 5.200 h para 3.950 h.
@@ -132,15 +132,47 @@ Commit:
 
 ## Bloco 3: Proposta de automação
 
-Início: __:__  Fim: __:__
+Início: 09:58  Fim: 11:00
+
+Pausa de 09:28 a 09:43 para café, fora do tempo de trabalho.
 
 **Fluxo decidido (ticket entra até humano):**
+- Piloto: um canal, só a cobrança do cliente, com três contadores: lembretes enviados, encerrados automaticamente e reabertos depois do encerramento.
+- Triagem e roteamento ficam como fase 2, que só entra em produção depois dos quatro campos instrumentados e do limiar de confiança calibrado com tickets reais.
+- O protótipo do Bloco 4 é a prova de viabilidade da fase 2, não o piloto.
+- Não escolhi juntar cobrança e triagem no mesmo piloto porque com os dois juntos não dá para saber qual causou o resultado. Essa é a regra de piloto que eu uso desde a fábrica.
+- Quatro portões humanos: confiança abaixo do limiar, cliente já insatisfeito, disputa financeira (reembolso, cobrança, cancelamento) e ticket crítico com sugestão da IA mas sem resposta automática.
 
 **O que NÃO automatizar e o exemplo dos dados que justifica cada item:**
+Não automatizar: os portões de autoridade (reembolso, dúvida ou disputa de fatura, cancelamento, crítico, cliente já insatisfeito), 75,3% dos tickets do dataset 1, e qualquer resposta que não esteja no banco validado.
 
-**De onde veio o critério do portão humano (minha experiência operando agentes):**
+**Fechamento do Bloco 3 (decisões minhas, substituem as anteriores onde houver conflito):**
+- Regra mestra: a IA só responde o que existe no banco de respostas validadas; o que não existe vai para humano validar uma vez e entra no banco. É o desenho do meu produto de atendente de IA, não resultado medido em escala.
+- Portões por autoridade, mesmo com resposta no banco: reembolso, dúvida ou disputa de fatura, cancelamento, crítico e cliente já insatisfeito. Acesso à conta e perda de dados saem dos portões e vão para entrada estruturada.
+- Crítico por regra operacional (serviço fora, pagamento bloqueado, perda de dados confirmada), não por escolha do cliente.
+- Passo zero: entrada estruturada com menu e 2 ou 3 campos obrigatórios por tipo; classificador confere o texto livre; se divergir, humano. Entra na recomendação 1.
+- Piloto "Lembrete de cliente parado": só e-mail, lembretes em 2 e 5 dias úteis, encerramento em 7, 8 semanas, parada acima de 20% de reabertura. Chat fica para onda posterior com régua de inatividade em minutos.
+- Implantação 20 a 40 horas, pela minha experiência. O piloto se justifica como instrumentação.
+- Fase 2 com parada: menos de 60% acima do limiar de confiança ou mais de 15% de correção humana.
+- Aprendizado: resolução repetida com nota 4 ou 5 vira resposta sugerida; nota 1 ou 2 vai para revisão. Resolução ligada à nota vira o quinto campo.
+
+**De onde veio o critério do portão humano:**
+Da regra do meu projeto de atendente de IA, que não inventa: responde só o que está no banco validado e chama humano para validar o resto uma vez. Dinheiro e crítico são portão por falta de autoridade, não por falta de resposta: reembolso tem resposta conhecida, mas quem aprova é gente. Crítico vem da fábrica: parada de linha se resolve com gente com autoridade, não com procedimento automático.
 
 **Onde a IA quis automatizar demais e eu segurei:**
+Não aconteceu. Aconteceu o contrário: a IA ampliou "não automatizar" de quatro portões para sete itens, incluindo acesso à conta e perda de dados, que são os mais padronizáveis. Segurei para o outro lado. A IA ofereceu estender o piloto a dois canais e eu fiquei só com e-mail, porque pendência significa coisas diferentes em cada canal.
+
+**O que eu adicionei que a IA sozinha não faria:**
+A regra mestra do banco de respostas validadas, que é o meu produto; a entrada estruturada, que vem das empresas em que vi funcionar e da minha própria triagem errando por assinatura no texto. A IA tratou o texto do ticket como entrada fixa a classificar; eu tratei como algo a padronizar antes de chegar na ferramenta.
+
+**Lista da IA: o que fez e o que achou (para eu editar):**
+- Escreveu e rodou `solution/analise/03_proposta.py`; resultado em `solution/02-proposta-automacao.md`, contagens no anexo de `docs/auditoria-dados.md`.
+- Primeira versão da proposta: 7 itens em "não automatizar" (incluía acesso à conta e perda de dados), canal Email, régua 2/5/7 dias, 8 semanas, parada em 20%, implantação 120/60/30 h. Lembrete para todo pendente, encerramento automático só fora dos portões.
+- Corrijo: eu disse que 78,8% dos tickets caem em portão; com acesso à conta e perda de dados fora dos portões, os portões de autoridade (financeiro ou Critical) somam 75,3%.
+- Só 24,2% dos pendentes são elegíveis a encerramento automático. Email: cerca de 50 pendentes e 4 encerramentos por semana na escala de 30 mil/ano; 34 em 8 semanas.
+- ROI recalculado com implantação 40/30/20 h: líquido 97 / 1.161 / 4.855 h/ano em todos os canais; só Email R$ 0,7 mil / R$ 14,7 mil / R$ 86 mil por ano; retorno da implantação 19,6 / 1,2 / 0,2 meses. Premissas da IA mantidas e declaradas: substituição 50/70/90%, encerrados 50/35/20%, reabertura 20/10/5%.
+- Dataset 2: até 84,9% dos textos têm "thanks", "regards", "best" ou "annual leave"; "out of office" não aparece. É teto, porque "thank" também é cortesia no meio do pedido.
+- Resolution: 2.769 textos únicos em 2.769 fechados, nenhum repetido no mesmo assunto. A regra de aprendizado não é testável neste dataset.
 
 Commit:
 

@@ -31,7 +31,7 @@ Reproduzir: `.venv/bin/python -I solution/analise/01_auditoria.py`
   Correlação de Spearman CSAT x "duração" derivada: 0,022. CSAT x idade: -0,004. O maior gap entre produtos (Fitbit Versa 2,54 vs Dyson 3,22, n entre 47 e 83) cabe no ruído (Kruskal p=0,667).
 - **"Other" em Customer Gender:** é valor real da coluna (2.686 tickets, ao lado de Male 2.896 e Female 2.887), diferente do "outros" que a página do Kaggle mostra ao resumir colunas.
 - **Categorias equilibradas demais:** 5 tipos entre 1.634 e 1.752; 4 prioridades entre 2.063 e 2.192; 4 canais entre 2.073 e 2.143; 3 status entre 2.769 e 2.881; 42 produtos entre 178 e 240. Prioridade não depende do tipo (chi2 p=0,561) nem do canal (p=0,078). Em operação real, "Critical" não teria a mesma frequência que "Low" e pedido de reembolso não teria a mesma chance de ser crítico que dúvida de produto.
-- **Tipo x Assunto são independentes (chi2 p=0,981).** "Refund request" aparece como assunto em 100 tickets de Billing, 126 de Cancellation, 122 de Product inquiry. O rótulo do tipo não descreve o assunto.
+- **Tipo x Assunto são independentes (chi2 p=0,981).** "Refund request" aparece como assunto em 100 tickets de Billing inquiry (dúvida ou disputa de fatura), 126 de Cancellation, 122 de Product inquiry. O rótulo do tipo não descreve o assunto.
 - **Texto (Ticket Description): gerado.**
   - 8.469 de 8.469 contêm o placeholder literal `{product_purchased}` sem substituir.
   - Só 16 primeiras frases distintas em 8.469 tickets. 5.868 (69%) começam com "I'm having an issue with the {product_purchased}. Please assist."
@@ -57,7 +57,7 @@ Reproduzir: `.venv/bin/python -I solution/analise/01_auditoria.py`
 
 - **Texto:** mediana 26 palavras (média 43,6, máx 981). Já pré-processado: minúsculas, sem pontuação, sem stopwords, nomes removidos. Tem cara de e-mail real de service desk interno (assinaturas, "sent monday july", "importance high", PO de compra). Diferente do D1, não há placeholder nem frase-modelo.
 - **Ruído de rótulo visível:** exemplo amostrado "oracle issue with project tasks editing" rotulado Hardware. Hardware parece absorver chamados de sistema. Isso limita o teto de acurácia de qualquer classificador e precisa entrar na avaliação.
-- **Correspondência com o D1: nenhuma direta.** D2 é service desk interno de TI/RH (HR Support, Purchase, Internal Project, Administrative rights). D1 é suporte ao consumidor de eletrônicos (Refund, Cancellation, Billing). Sobreposição parcial só de assunto: Account access ~ Access, Hardware issue ~ Hardware, Data loss ~ Storage. Sem rótulo comum, o classificador treinado no D2 **não pode ser medido no texto do D1**; e o texto do D1 não carrega sinal do próprio rótulo.
+- **Correspondência com o D1: nenhuma direta.** D2 é service desk interno de TI/RH (HR Support, Purchase, Internal Project, Administrative rights). D1 é suporte ao consumidor de eletrônicos (Refund, Cancellation, Billing inquiry, ou dúvida ou disputa de fatura). Sobreposição parcial só de assunto: Account access ~ Access, Hardware issue ~ Hardware, Data loss ~ Storage. Sem rótulo comum, o classificador treinado no D2 **não pode ser medido no texto do D1**; e o texto do D1 não carrega sinal do próprio rótulo.
 
 ## Conclusão da auditoria
 
@@ -106,3 +106,40 @@ Amplitude de 24,0 pontos entre as 80 combinações. Embaralhando o status 500 ve
 | Gênero | Female 2,97 | Male 3,03 | 0,148 | 0,625 |
 
 Spearman CSAT x idade -0,004; CSAT x (Time to Resolution menos First Response Time) 0,022. Floresta aleatória com todas as variáveis, validação cruzada em 5 partes (seed 42): 20,0% de acerto (desvio 0,7 ponto), contra 20,9% chutando sempre a nota mais comum.
+
+## Contagens usadas na proposta (Bloco 3)
+
+Saída de `solution/analise/03_proposta.py`.
+
+**Portões de autoridade no dataset 1 (8.469 tickets):**
+
+| Item | Tickets | % |
+|---|---|---|
+| Ticket Type Refund request (reembolso) | 1.752 | 20,7 |
+| Ticket Type Billing inquiry (dúvida ou disputa de fatura) | 1.634 | 19,3 |
+| Assunto Payment issue (dúvida ou disputa de fatura) | 526 | 6,2 |
+| Ticket Type Cancellation request (cancelamento) | 1.695 | 20,0 |
+| Assunto Refund request / Cancellation request | 576 / 487 | 6,8 / 5,8 |
+| Financeiro por tipo OU assunto | 5.707 | 67,4 |
+| Priority Critical | 2.129 | 25,1 |
+| Financeiro OU Critical (portões de autoridade) | 6.379 | 75,3 |
+| Nota 1 ou 2 entre os fechados | 1.102 de 2.769 | 39,8 |
+| Assunto Data loss / Account access (não são portão) | 491 / 509 | 5,8 / 6,0 |
+
+**Piloto:** Email tem 2.143 tickets (25,3%) e 722 pendentes. Pendentes fora de portão financeiro ou Critical, elegíveis a encerramento automático: 24,2% de todos os pendentes.
+
+**Resolution:** 2.769 textos nos fechados, 2.769 únicos. Nenhum se repete, nem dentro do mesmo assunto.
+
+**Resíduo de fecho ou ausência no dataset 2 (47.837 textos, busca por palavra inteira):**
+
+| Termo | Textos | % |
+|---|---|---|
+| thanks / thank | 31.944 | 66,8 |
+| regards | 19.571 | 40,9 |
+| best | 7.544 | 15,8 |
+| annual leave | 1.034 | 2,2 |
+| out of office | 0 | 0,0 |
+| Qualquer um | 40.602 | 84,9 |
+| Qualquer um, sem "best" (ambíguo: aparece em "best tool") | 40.390 | 84,4 |
+
+"out of office" não aparece em nenhuma forma ("out of office" ou "out office"). "thank" pode ser cortesia no meio do pedido e não só assinatura, então 84,9% é teto do resíduo, não contagem exata de assinaturas.
