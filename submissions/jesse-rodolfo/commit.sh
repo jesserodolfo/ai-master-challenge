@@ -9,6 +9,7 @@ cd "$ROOT"
 git add -f submissions/jesse-rodolfo \
   ':!submissions/jesse-rodolfo/solution/data/raw' \
   ':!submissions/jesse-rodolfo/.venv' \
+  ':!submissions/jesse-rodolfo/solution/prototipo/modelo.joblib' \
   ':!submissions/jesse-rodolfo/**/__pycache__' \
   ':!submissions/jesse-rodolfo/**/.ipynb_checkpoints'
 echo "=== arquivos no commit ==="

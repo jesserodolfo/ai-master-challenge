@@ -1,0 +1,7 @@
+[
+  "solution/prototipo/test_rotear.py::test_confianca_baixa_vai_para_humano",
+  "solution/prototipo/test_rotear.py::test_modelo_carrega",
+  "solution/prototipo/test_rotear.py::test_portao_vai_para_humano_mesmo_com_confianca_alta",
+  "solution/prototipo/test_rotear.py::test_texto_claro_acerta_a_categoria",
+  "solution/prototipo/test_rotear.py::test_texto_vazio_vai_para_humano"
+]

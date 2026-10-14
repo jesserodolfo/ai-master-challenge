@@ -6,3 +6,5 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .env
+# modelo treinado: regenerar com treinar.py
+solution/prototipo/modelo.joblib

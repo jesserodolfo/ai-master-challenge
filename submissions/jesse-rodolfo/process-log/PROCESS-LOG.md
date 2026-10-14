@@ -180,7 +180,9 @@ Commit:
 
 ## Bloco 4: Protótipo
 
-Início: __:__  Fim: __:__
+Início: 11:05  Fim: 11:15
+
+Executor trocado de Opus 5.5 para Sonnet 5.5 neste bloco, por limite de uso do Opus (89% às 10:57, janela volta às 12:20). Os Blocos 0 a 3 foram feitos com Opus 5.5; o código do protótipo e a medição do Bloco 4 foram feitos com Sonnet 5.5.
 
 **O que construí e o que deixei de fora de propósito:**
 
@@ -191,6 +193,22 @@ Início: __:__  Fim: __:__
 **Onde a IA errou (código, avaliação, categorias) e como corrigi:**
 
 **Iterações até funcionar:**
+Uma passada: `treinar.py`, `rotear.py` e `test_rotear.py` rodaram na primeira execução (5 testes passando). Depois, um ajuste no teste do portão para afirmar confiança de 0,9 ou mais, em vez de só desligar o limiar.
+
+**Decisões minhas no Bloco 4:**
+- Limiar 0,7 e portões `Purchase` e `Administrative rights` foram propostos pela IA e confirmados por mim com este raciocínio. Purchase é dinheiro e precisa de quem aprova a compra. Administrative rights é alçada: dar privilégio de administrador é decisão de segurança. Access fica fora dos portões, coerente com o Bloco 3, onde acesso à conta saiu dos portões.
+- Limiar 0,7 porque categoria errada vira resposta validada errada para o cliente. Um erro em 30 nos aceitos é o máximo que aceito no piloto. O limiar 0,9 cobre só 38,7% e não paga o piloto.
+- A cobertura de 62,9% no limiar 0,7 ficou perto da parada de 60% da fase 2. A regra de parada não muda depois de ver o número; o piloto com texto real decide.
+- Ideia minha para depois da fase 1: o portão de Administrative rights pode virar verificação contra uma lista de autorizados mantida por quem tem alçada, e o humano só vê a exceção. O mesmo raciocínio vale para Purchase, com teto de valor. Fica como portão na fase 1 porque essa lista não existe no dataset.
+
+**Lista da IA: o que fez e o que achou (para eu editar):**
+- Escopo seguido como pedido: `treinar.py`, `rotear.py`, `test_rotear.py` e `README.md` em `solution/prototipo/`. Sem Streamlit.
+- Held-out de 9.568 tickets (20% estratificado, seed 42): acurácia 85,69%, contra 28,47% da classe majoritária (Hardware).
+- Limiar 0,5 / 0,6 / 0,7 / 0,8 / 0,9: cobertura 82,7 / 73,1 / 62,9 / 52,0 / 38,7%; acurácia nos aceitos 92,1 / 94,6 / 96,7 / 98,0 / 99,3%.
+- Escolhas minhas, a confirmar: limiar padrão 0,7 e portões `Purchase` e `Administrative rights` (as duas categorias do dataset 2 mais próximas de dinheiro e autoridade). Com elas, 57,3% do held-out vai para "automático" com 96,5% de acerto.
+- Resíduo removido: "thanks", "thank", "regards", "best", "annual leave". Incluí "thank" além de "thanks", como na contagem da auditoria.
+- Para o modelo não subir no commit: `.gitignore` local e uma exclusão em `commit.sh`, porque `git add -f` ignora o `.gitignore`.
+- Cobertura de 62,9% no limiar 0,7 está perto da regra de parada da fase 2 (pausar abaixo de 60%).
 
 Commit:
 
