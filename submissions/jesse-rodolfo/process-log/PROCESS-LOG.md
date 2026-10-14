@@ -185,12 +185,16 @@ Início: 11:05  Fim: 11:15
 Executor trocado de Opus 5.5 para Sonnet 5.5 neste bloco, por limite de uso do Opus (89% às 10:57, janela volta às 12:20). Os Blocos 0 a 3 foram feitos com Opus 5.5; o código do protótipo e a medição do Bloco 4 foram feitos com Sonnet 5.5.
 
 **O que construí e o que deixei de fora de propósito:**
+O que construí: três arquivos em solution/prototipo. treinar.py treina o classificador e mede. rotear.py recebe o texto do ticket e devolve categoria, confiança e rota (automático ou humano). test_rotear.py com 5 testes. README do protótipo com a tabela de limiar. Sem Streamlit por decisão minha: CLI com testes já prova o fluxo, e guardei a cota de uso pro Bloco 5.
 
 **Como medi (tamanho da amostra aleatória, acurácia, matriz de confusão):**
+Como medi: os 47.837 tickets do dataset 2 já vinham com categoria marcada. Separei 20% (9.568) antes de treinar, treinei nos 80%, classifiquei os escondidos e comparei com a marcação. Acurácia 85,69% contra 28,47% de chutar sempre Hardware. Depois medi cobertura e acerto nos aceitos pra limiares de 0,5 a 0,9 e escolhi 0,7: 62,9% dos tickets passam do limiar; tirando os portões, 57,3% ficam automáticos com 96,5% de acerto. Limite da medição: o texto do dataset 2 já vem limpo; com texto real a cobertura pode cair.
 
 **Testes de regressão escritos:**
+Testes de regressão: 5 testes pytest, todos passando. Modelo carrega; texto vazio vai pro humano; confiança baixa vai pro humano; categoria de portão vai pro humano mesmo com confiança 0,9; texto claro de Purchase acerta a categoria. Protegem a regra de roteamento, não a acurácia do modelo.
 
 **Onde a IA errou (código, avaliação, categorias) e como corrigi:**
+- A IA apontou que o texto do campo "Como medi" dava 62,9% como automático com 96,7% de acerto. Esse é o número de passar do limiar; o automático, tirando os portões Purchase e Administrative rights, é 57,3% com 96,5% de acerto. Correção aceita por mim e aplicada no texto.
 
 **Iterações até funcionar:**
 Uma passada: `treinar.py`, `rotear.py` e `test_rotear.py` rodaram na primeira execução (5 testes passando). Depois, um ajuste no teste do portão para afirmar confiança de 0,9 ou mais, em vez de só desligar o limiar.
