@@ -239,7 +239,7 @@ A revisão final (Opus 5.5, só leitura) achou `.pytest_cache/` (4 arquivos) e `
 **Tempo total:**
 4 h 43 líquidas em 5 h decorridas (07:30 a 12:30, 17 min de pausa). Intervalos entre blocos foram checkpoints com o revisor, log e commits.
 
-Commit: pendente
+Commit: ef81233, mais o commit final deste fechamento
 
 ---
 
