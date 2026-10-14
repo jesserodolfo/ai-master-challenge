@@ -1,26 +1,80 @@
 # Auditoria dos dados (Bloco 1)
 
-Preencher com o que foi verificado por código nesta sessão. Nada aqui é afirmado sem ter rodado.
+Tudo abaixo saiu de `solution/analise/01_auditoria.py`, rodado nesta sessão com pandas 3.0.6 / scipy.
+Reproduzir: `.venv/bin/python -I solution/analise/01_auditoria.py`
 
-## Dataset 1: Customer Support Ticket Dataset
+## Dataset 1: Customer Support Ticket Dataset (`customer_support_tickets.csv`)
 
-- Registros:
-- Colunas e tipos:
-- Nulos por coluna:
-- Campos de tempo: duração ou carimbo? unidade?
-- Satisfação: preenchida em quais tickets? distribuição?
-- Texto: real ou gerado? evidência:
-- Anomalias:
+- **Registros:** 8.469 linhas, 17 colunas. Não bate com os "30 mil por ano" do brief (28% disso), e não há data de abertura do ticket para anualizar.
+- **Duplicados:** 0 linhas e 0 Ticket ID repetidos. 139 e-mails aparecem mais de uma vez, sempre com nomes diferentes (139 de 139): e-mail gerado aleatoriamente, não identifica cliente. Não dá para medir cliente recorrente.
+- **Nulos:** só em 4 colunas, e seguem o status à risca:
 
-## Dataset 2: IT Service Ticket Classification
+| Status | n | First Response Time | Time to Resolution | CSAT | Resolution |
+|---|---|---|---|---|---|
+| Closed | 2.769 | 100% | 100% | 100% | 100% |
+| Pending Customer Response | 2.881 | 100% | 0% | 0% | 0% |
+| Open | 2.819 | 0% | 0% | 0% | 0% |
 
-- Registros:
-- Distribuição das 8 categorias:
-- Tamanho médio do texto:
-- Correspondência com as categorias do dataset 1:
+- **Campos de tempo: são carimbos de hora, não durações.** First Response Time e Time to Resolution são datetimes, todos entre 2023-05-31 21:53 e 2023-06-02 00:55 (janela de 27 horas). A compra é de 2020-01-01 a 2021-12-30. Não existe coluna de abertura do ticket, então tempo de primeira resposta e tempo de resolução **não são calculáveis**.
+- **Tentativa de derivar duração:** Time to Resolution menos First Response Time, nos 2.769 Closed: mediana 0,17 h, mínimo -23,2 h, máximo +23,5 h. **1.365 de 2.769 (49%) resolvem antes da primeira resposta.** O campo é ruído uniforme em torno de zero, não serve como duração.
+- **Satisfação (CSAT):** só existe nos 2.769 Closed. Distribuição plana de 1 a 5 (553 / 549 / 580 / 543 / 544). Média 2,96 a 3,08 em qualquer corte. Nenhuma variável explica a nota:
+
+| Variável | chi2 p | Kruskal p |
+|---|---|---|
+| Prioridade | 0,400 | 0,629 |
+| Canal | 0,467 | 0,278 |
+| Tipo | 0,257 | 0,699 |
+| Assunto | 0,876 | 0,807 |
+| Produto | 0,253 | 0,667 |
+| Gênero | 0,148 | 0,625 |
+
+  Correlação de Spearman CSAT x "duração" derivada: 0,022. CSAT x idade: -0,004. O maior gap entre produtos (Fitbit Versa 2,54 vs Dyson 3,22, n entre 47 e 83) cabe no ruído (Kruskal p=0,667).
+- **"Other" em Customer Gender:** é valor real da coluna (2.686 tickets, ao lado de Male 2.896 e Female 2.887), diferente do "outros" que a página do Kaggle mostra ao resumir colunas.
+- **Categorias equilibradas demais:** 5 tipos entre 1.634 e 1.752; 4 prioridades entre 2.063 e 2.192; 4 canais entre 2.073 e 2.143; 3 status entre 2.769 e 2.881; 42 produtos entre 178 e 240. Prioridade não depende do tipo (chi2 p=0,561) nem do canal (p=0,078). Em operação real, "Critical" não teria a mesma frequência que "Low" e pedido de reembolso não teria a mesma chance de ser crítico que dúvida de produto.
+- **Tipo x Assunto são independentes (chi2 p=0,981).** "Refund request" aparece como assunto em 100 tickets de Billing, 126 de Cancellation, 122 de Product inquiry. O rótulo do tipo não descreve o assunto.
+- **Texto (Ticket Description): gerado.**
+  - 8.469 de 8.469 contêm o placeholder literal `{product_purchased}` sem substituir.
+  - Só 16 primeiras frases distintas em 8.469 tickets. 5.868 (69%) começam com "I'm having an issue with the {product_purchased}. Please assist."
+  - O resto do texto mistura frases sem relação ("I would like my price to rise so that I can return it", "Please give credit to: @joeyclay").
+  - A frase-modelo também não acompanha o assunto: "I'm unable to access my account" aparece com assunto Delivery problem (17) e Display issue (14). A palavra-chave do assunto aparece no texto em 23,2% dos tickets.
+- **Resolution: texto aleatório** estilo gerador de lorem ("Offer investment fish.", "Should strong investment lead.").
+
+## Dataset 2: IT Service Ticket Classification (`all_tickets_processed_improved_v3.csv`)
+
+- **Registros:** 47.837 linhas, 2 colunas (Document, Topic_group), 0 nulos, 0 textos duplicados.
+- **Distribuição das 8 categorias (desbalanceada, como operação real):**
+
+| Categoria | n | % |
+|---|---|---|
+| Hardware | 13.617 | 28,5 |
+| HR Support | 10.915 | 22,8 |
+| Access | 7.125 | 14,9 |
+| Miscellaneous | 7.060 | 14,8 |
+| Storage | 2.777 | 5,8 |
+| Purchase | 2.464 | 5,2 |
+| Internal Project | 2.119 | 4,4 |
+| Administrative rights | 1.760 | 3,7 |
+
+- **Texto:** mediana 26 palavras (média 43,6, máx 981). Já pré-processado: minúsculas, sem pontuação, sem stopwords, nomes removidos. Tem cara de e-mail real de service desk interno (assinaturas, "sent monday july", "importance high", PO de compra). Diferente do D1, não há placeholder nem frase-modelo.
+- **Ruído de rótulo visível:** exemplo amostrado "oracle issue with project tasks editing" rotulado Hardware. Hardware parece absorver chamados de sistema. Isso limita o teto de acurácia de qualquer classificador e precisa entrar na avaliação.
+- **Correspondência com o D1: nenhuma direta.** D2 é service desk interno de TI/RH (HR Support, Purchase, Internal Project, Administrative rights). D1 é suporte ao consumidor de eletrônicos (Refund, Cancellation, Billing). Sobreposição parcial só de assunto: Account access ~ Access, Hardware issue ~ Hardware, Data loss ~ Storage. Sem rótulo comum, o classificador treinado no D2 **não pode ser medido no texto do D1**; e o texto do D1 não carrega sinal do próprio rótulo.
 
 ## Conclusão da auditoria
 
-O que dá para concluir com segurança:
-O que não dá:
-O que muda na abordagem por causa disso:
+**O que dá para concluir com segurança:**
+- D1 é sintético. Evidências: placeholder não substituído em 100%, 16 frases-modelo, Resolution aleatório, CSAT plano e independente de tudo, distribuições uniformes, 49% de resoluções antes da primeira resposta, e-mails reaproveitados com outro nome.
+- D1 serve para descrever **estrutura do fluxo** (3 status, 4 canais, 5 tipos, onde os campos param de ser preenchidos) e volume relativo de backlog: 67% dos tickets (5.700 de 8.469) não estão fechados, 34% esperando o cliente.
+- D2 é texto realista e rotulado, com desbalanceamento real. É a base certa para treinar e medir o classificador.
+
+**O que não dá:**
+- Calcular tempo de primeira resposta, tempo de resolução ou tempo parado por ticket. Os campos não permitem.
+- Afirmar o que move satisfação. Nos dados, nada move. Qualquer "insight" de CSAT por canal ou produto tirado deste dataset é ruído.
+- Medir retrabalho, reabertura, repasse entre times ou troca de canal: não há coluna para isso.
+- Validar classificador em texto do D1.
+- Projetar para 30 mil tickets/ano a partir de contagem do D1 sem premissa externa.
+
+**O que muda na abordagem (proposta, decisão do Jessé):**
+1. O diagnóstico vira "o que esses dados deixam e não deixam ver", e o achado principal é que a operação, se mede assim, não tem instrumentação para saber onde perde tempo. Isso é diagnóstico, não desculpa.
+2. Horas de desperdício saem de premissas explícitas em faixa (tempo de triagem por ticket, % reclassificado), aplicadas aos 30 mil do brief, e não de médias do D1.
+3. Classificador treinado e medido no D2 com split aleatório estratificado e seed fixa. D1 entra só como teste de sanidade de roteamento por regra (tipo, prioridade, canal) e como exemplo de por que texto ruim derruba automação.
+4. Lista mínima de campos que a operação precisa começar a registrar (abertura, primeira resposta, reabertura, transferências) antes de qualquer automação ser avaliada em produção.

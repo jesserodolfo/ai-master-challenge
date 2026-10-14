@@ -34,7 +34,7 @@ Commit:
 
 ## Bloco 1: Auditoria dos dados
 
-Início: __:__  Fim: __:__
+Início: 07:58  Fim: 08:15
 
 8:00 a 8:02 parado por bloqueio de permissão do macOS na pasta Documentos, resolvido liberando acesso para o Terminal. Tempo de setup, não de análise.
 
@@ -43,10 +43,30 @@ Início: __:__  Fim: __:__
 **O que a IA afirmou e eu mandei verificar:**
 
 **Onde a IA errou e como corrigi:**
+- Primeira versão de `solution/analise/01_auditoria.py` usou a coluna `Product`, que não existe no dataset 1 (o nome real é `Product Purchased`). O script quebrou com KeyError antes de calcular qualquer coisa. Corrigido o nome e rodado de novo; nenhum número foi afirmado com a versão errada.
+
+**Hipóteses do Bloco 0 confirmadas pela auditoria (escritas às 07:30, antes de abrir os dados):**
+- Tempo como carimbo de hora: First Response Time e Time to Resolution são data e hora, todos entre 2023-05-31 21:53 e 2023-06-02 00:55. Não existe data de abertura, então não há duração calculável.
+- O "outros" do Kaggle: o dataset 2 tem exatamente 8 categorias nomeadas, somando 47.837 de 47.837 linhas, sem nulo e sem categoria "Other". O "outros" era resumo da página do Kaggle, não categoria perdida.
+- Satisfação preenchida só em parte: Customer Satisfaction Rating existe em 2.769 de 8.469 tickets (33%), só nos de status Closed.
+- Texto com cara de inventado: 8.469 de 8.469 descrições têm o placeholder `{product_purchased}` sem substituir, e só 16 frases de abertura distintas.
+- Quantidade diferente dos 30 mil: o D1 tem 8.469 tickets (28% dos 30 mil do brief).
+
+**Lista da IA: o que fez e o que achou (para eu editar):**
+- Escreveu e rodou `solution/analise/01_auditoria.py` nos dois CSVs brutos; resultado completo em `docs/auditoria-dados.md`.
+- D1: 8.469 tickets (28% dos 30 mil do brief), 0 duplicados, 139 e-mails repetidos sempre com nome diferente.
+- D1: nulos seguem o status. Open (2.819) sem nenhum tempo; Pending Customer Response (2.881) só com primeira resposta; Closed (2.769) com tudo.
+- D1: Time to Resolution menos First Response Time é negativo em 1.365 de 2.769 fechados (49%).
+- D1: CSAT só nos fechados, plano de 1 a 5, nenhum teste significativo (chi2 e Kruskal com p entre 0,148 e 0,876 para prioridade, canal, tipo, assunto, produto, gênero).
+- D1: texto gerado. 100% com `{product_purchased}` sem substituir, 16 frases de abertura distintas, Resolution aleatório, tipo x assunto independentes (p=0,981).
+- D1: categorias uniformes; prioridade não depende do tipo (p=0,561) nem do canal (p=0,078).
+- D2: 47.837 textos realistas, 8 categorias desbalanceadas (Hardware 28,5% a Administrative rights 3,7%), ruído de rótulo visível.
+- D1 x D2: categorias não correspondem; classificador não pode ser medido no texto do D1.
 
 **O que os dados permitem concluir e o que não permitem:**
 
 **Decisão minha:**
+O D1 não serve para medir tempo nem satisfação, e eu vou provar isso em vez de fingir que serve. O que ele tem de confiável é a estrutura do backlog: 67% não fechados (33% abertos e 34% esperando o cliente), o que já sustenta a minha hipótese de que o desperdício está na espera. O diagnóstico vai dizer com clareza o que dá para afirmar, o que não dá, e o que a operação precisa registrar para passar a dar. O desperdício eu calculo em faixa, por premissa, sobre os 30 mil tickets por ano do brief, com cada premissa escrita para o diretor trocar pelo número dele. O D2 fica para provar que classificar ticket por texto funciona. Já vivi essa situação na logística: o indicador oficial escondia 500 pedidos, e a decisão certa foi consertar a medição antes de expandir. Aqui é a mesma coisa: instrumentar antes de automatizar.
 
 Commit:
 
