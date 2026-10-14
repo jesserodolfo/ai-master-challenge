@@ -78,3 +78,31 @@ Reproduzir: `.venv/bin/python -I solution/analise/01_auditoria.py`
 2. Horas de desperdício saem de premissas explícitas em faixa (tempo de triagem por ticket, % reclassificado), aplicadas aos 30 mil do brief, e não de médias do D1.
 3. Classificador treinado e medido no D2 com split aleatório estratificado e seed fixa. D1 entra só como teste de sanidade de roteamento por regra (tipo, prioridade, canal) e como exemplo de por que texto ruim derruba automação.
 4. Lista mínima de campos que a operação precisa começar a registrar (abertura, primeira resposta, reabertura, transferências) antes de qualquer automação ser avaliada em produção.
+
+## Testes usados no diagnóstico (Bloco 2)
+
+Saída de `solution/analise/02_diagnostico.py`. O diagnóstico cita só a conclusão; os testes ficam aqui.
+
+**Status x prioridade, canal e tipo (qui-quadrado):**
+
+| Corte | % fechado, menor e maior | p |
+|---|---|---|
+| Prioridade | Low 31,2% a Critical 34,1% | 0,227 |
+| Canal | Social media 32,2% a Email 33,6% | 0,771 |
+| Tipo | Cancellation 30,4% a Refund 34,0% | 0,339 |
+| 80 combinações canal x prioridade x tipo (85 a 136 tickets cada) | 19,4% a 43,4% | 0,081 |
+
+Amplitude de 24,0 pontos entre as 80 combinações. Embaralhando o status 500 vezes (seed 42), o acaso sozinho dá de 17,9 a 27,1 pontos (percentis 5 e 95).
+
+**CSAT x variáveis (só os 2.769 fechados):**
+
+| Variável | Pior média | Melhor média | Qui-quadrado p | Kruskal p |
+|---|---|---|---|---|
+| Prioridade | Critical 2,96 | Low 3,05 | 0,400 | 0,629 |
+| Canal | Phone 2,95 | Chat 3,08 | 0,467 | 0,278 |
+| Tipo | Refund 2,93 | Cancellation 3,03 | 0,257 | 0,699 |
+| Assunto | Delivery problem 2,80 | Installation support 3,18 | 0,876 | 0,807 |
+| Produto | Fitbit Versa 2,54 | Dyson 3,22 | 0,253 | 0,667 |
+| Gênero | Female 2,97 | Male 3,03 | 0,148 | 0,625 |
+
+Spearman CSAT x idade -0,004; CSAT x (Time to Resolution menos First Response Time) 0,022. Floresta aleatória com todas as variáveis, validação cruzada em 5 partes (seed 42): 20,0% de acerto (desvio 0,7 ponto), contra 20,9% chutando sempre a nota mais comum.

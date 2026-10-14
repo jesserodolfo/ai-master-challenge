@@ -74,20 +74,57 @@ Commit:
 
 ## Bloco 2: Diagnóstico
 
-Início: __:__  Fim: __:__
+Início: 08:18  Fim: 09:12
 
 **Os cinco números que importam:**
-1.
-2.
-3.
-4.
-5.
+1. 67% dos tickets não fechados (33% abertos e 34% esperando o cliente). O desperdício está na espera.
+2. Nada explica a satisfação: modelo com todas as variáveis acerta 20,0%, chutar a nota mais comum acerta 20,9%.
+3. Os campos de tempo não medem tempo: em 49% dos fechados a resolução vem antes da primeira resposta.
+4. Desperdício estimado de 1.042 a 11.400 horas por ano, caso base 3.950 (2,5 agentes), com cada premissa escrita.
+5. Maior item recuperável: cobrança de cliente parado, 1.700 horas por ano, recuperável por automação.
 
 **Premissas que eu defini para o cálculo de desperdício:**
+- As premissas originais do cálculo foram propostas pela IA, sem medição.
+- Custo da hora substituído por dado da minha operação de atendimento, que era de venda e não de suporte: só comissão deu R$ 56 a 74 por hora (10% de ticket médio R$ 297, 15 a 20 vendas por dia, 8 horas); fixo mais comissão deu R$ 29 a 37 (R$ 1.200 fixo mais 4%, 22 dias, 176 horas). Usei piso R$ 30, base R$ 50, teto R$ 70.
+- Horas produtivas mantidas em 1.600 por agente por ano: conservador para CLT de 44 horas, descontando férias e feriados.
+- Triagem substituída por medição minha (abaixo): piso 20 s, base 30 s, teto 3 min.
+- Repasse e cobrança ficaram como premissa declarada, marcadas "premissa não medida, a confirmar na primeira semana do piloto", por falta de medição. Isso é a recomendação 1.
+
+**Cronometragem da triagem (5 tickets aleatórios do dataset 2, seed 20261014, categoria escondida):**
+
+| Ticket | Tempo | Minha resposta sem ajuda | Depois da revisão com segundo modelo | Rótulo do dataset |
+|---|---|---|---|---|
+| 1 (linha 1461, "new pool and reservations") | 34,65 s | Internal Project ❌ | Internal Project ❌ | Miscellaneous |
+| 2 (linha 34400, "warning laptop anti software") | 21 s | HR Support ❌ | Hardware ✅ | Hardware |
+| 3 (linha 13309, "admin rights on groups") | 10 s | HR Support ❌ | Administrative rights ❌ | Miscellaneous |
+| 4 (linha 21921, "confluence external users to remove") | 24,81 s | Access ✅ | Access ✅ | Access |
+| 5 (linha 18186, "access unable log permission") | 9,24 s | Access ❌ | Access ❌ | Hardware |
+
+Média 19,94 s. Acerto contra o rótulo do dataset: sem ajuda 1 de 5; depois da revisão com segundo modelo 2 de 5.
+
+Correção deste log: a primeira versão registrou Hardware e Administrative rights nos tickets 2 e 3 como respostas minhas. Eram a leitura do meu revisor (segundo modelo). Minhas respostas originais, sem ajuda, foram HR Support nos dois.
+
+Minhas observações sobre a medição: o texto veio pré-processado, sem pontuação, com palavras repetidas e sem separar a assinatura do e-mail do corpo do pedido. A leitura foi de palavra-chave, não de entender o problema. Com o texto original um humano triaria melhor e levaria uns 10 segundos a mais por ticket. No ticket 2 a assinatura "annual leave december" me puxou para RH, quando o pedido era um aviso de antivírus no laptop.
+
+Consequências que levo para a proposta:
+1. Triagem humana em texto ruim erra. Isso justifica classificador com limiar de confiança e humano confirmando o que tiver confiança baixa.
+2. Em produção o classificador recebe o texto original do ticket, não o pré-processado, com a assinatura do e-mail removida antes de classificar.
+
+**Etiquetas de recuperação:** a IA propôs cobrança do cliente como recuperável por processo. Discordei: é recuperável por automação, com lembrete automático e encerramento após prazo.
+
+**Lista da IA: o que fez e o que achou (para eu editar):**
+- Escreveu e rodou `solution/analise/02_diagnostico.py`; resultado em `solution/01-diagnostico.md`. Testes estatísticos movidos para `docs/auditoria-dados.md`.
+- Status não depende de prioridade (p = 0,227), canal (p = 0,771) nem tipo (p = 0,339). A amplitude de 24 pontos entre 80 combinações cabe no acaso (permutação: 17,9 a 27,1 pontos).
+- CSAT: modelo com todas as variáveis acerta 20,0%, abaixo dos 20,9% do chute da nota mais comum.
+- Desperdício com as premissas finais: 1.042 a 11.400 h/ano, base 3.950 h, 2,5 agentes, R$ 198 mil/ano. Maior item recuperável: cobrança do cliente, 1.700 h no base.
+- Sensibilidade: as duas premissas que mais mexem no total são do ciclo de cobrança (amplitude 1.700 h cada), seguidas da triagem (1.333 h). Repasse fica empatado com pendente e reabertura (1.000 h).
+- 60,0% dos tickets do dataset 1 são do tipo Refund, Billing ou Cancellation; só 18,8% têm assunto Refund, Payment ou Cancellation.
 
 **Onde a IA errou e como corrigi:**
+- A IA propôs triagem de 1,5 a 5 minutos por ticket, sem medição. Cronometrei 5 tickets aleatórios: média 19,94 s. A premissa de triagem caiu para 20 s a 3 min, e a triagem no caso base caiu de 1.500 h/ano para 250 h/ano. O total base caiu de 5.200 h para 3.950 h.
 
 **O que eu adicionei que a IA sozinha não faria:**
+Desconfiei do dado antes de abrir e provei que ele não mede tempo nem satisfação. A IA desta sessão fez a auditoria antes de qualquer média porque o CLAUDE.md que eu escrevi mandou desconfiar primeiro. Sem essa direção, o caminho padrão seria calcular médias por canal e prioridade e apresentar como gargalo. Troquei as premissas dela pelo custo da hora da minha operação e pela triagem cronometrada em mim mesmo, e deixei por escrito o que ninguém mediu. Decidi responder as três perguntas do diretor mesmo com dado ruim, em faixa e com sensibilidade, em vez de só dizer que o dado não serve. Classifiquei o desperdício por recuperabilidade e coloquei a cobrança de cliente como automação, porque já operei isso. E mantive a tabela de sensibilidade como saiu, sem mexer em premissa para o resultado ficar como eu esperava.
 
 Commit:
 
